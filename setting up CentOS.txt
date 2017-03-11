@@ -1,0 +1,90 @@
+/usr/sbin/visudo
+#Allow root to run any command anywhere
+root    ALL=(ALL)   ALL
+euler   ALL=(ALL)   ALL                 <---- Add this line
+
+vi /etc/ssh/sshd_config
+AllowUsres euler                        <---- Add this line
+systemctl status sshd
+systemctl stop sshd
+systemctl start sshd
+
+ip addr                                 <---- IP address of machine
+
+sudo yum install epel-release
+sudo yum update
+sudo reboot
+
+
+Install Java
+sudo yum install java-1.8.0-openjdk.x86_64
+
+In order to help Java-based applications locate the Java virtual machine properly, you need to set two environment variables: "JAVA_HOME" and "JRE_HOME".
+sudo cp /etc/profile /etc/profile_backup
+echo 'export JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk' | sudo tee -a /etc/profile
+echo 'export JRE_HOME=/usr/lib/jvm/jre' | sudo tee -a /etc/profile
+source /etc/profile
+
+
+Install Jenkins
+sudo yum install wget
+sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+sudo rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key
+sudo yum install jenkins
+
+Start the Jenkins service and set it to run at boot time:
+
+sudo systemctl start jenkins.service
+sudo systemctl enable jenkins.service
+In order to allow visitors access to Jenkins, you need to allow inbound traffic on port 8080:
+
+sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
+
+
+Install node.js
+
+sudo yum install nodejs
+
+
+Install Logstash (needs java)
+
+sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch
+
+sudo vi /etc/yum.repos.d/logstash.repo
+Add the following repository configuration:
+[logstash-2.2]
+name=logstash repository for 2.2 packages
+baseurl=http://packages.elasticsearch.org/logstash/2.2/centos
+gpgcheck=1
+gpgkey=http://packages.elasticsearch.org/GPG-KEY-elasticsearch
+enabled=1
+sudo yum -y install logstash
+
+it get's installed in /opt/logstash
+
+Centos on raspberry pi
+
+ ssh root@192.168.1.10
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ECDSA key sent by the remote host is
+SHA256:3cDwr6laTp0uUsm2QaC++umKfBEjnI+2W+s/72dPQz4.
+Please contact your system administrator.
+Add correct host key in /c/Users/daVinci/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in /c/Users/daVinci/.ssh/known_hosts:7
+ECDSA host key for 192.168.1.10 has changed and you have requested strict checking.
+Host key verification failed.
+
+ssh-keygen -R <host>        ssh-keygen -R 192.168.1.10
+
+passwd: centos
+
+Installing filebeat
+
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.2.2-x86_64.rpm
+sudo rpm -vi filebeat-5.2.2-x86_64.rpm

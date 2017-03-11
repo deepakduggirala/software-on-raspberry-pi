@@ -1,0 +1,44 @@
+#!/bin/bash
+
+## Check for versions compiled with ARM at http://nodejs.org/dist/
+## Inspired by http://oskarhane.com/raspberry-pi-install-node-js-and-npm/
+## Fill in the Node Version here:
+
+##########################################################################
+
+NODE_VERSION="v0.10.21"
+
+##########################################################################
+
+
+#Make a new dir where you'll put the binary
+sudo mkdir /opt/node
+
+#Get it
+wget http://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERRSION}-linux-arm-pi.tar.gz
+
+#unpack
+tar xvzf node-${NODE_VERSION}-linux-arm-pi.tar.gz
+
+#Copy to the dir you made as the first step
+sudo cp -r node-${NODE_VERSION}-linux-arm-pi/* /opt/node
+
+#Add node to your path so you can call it with just "node"
+#Add these lines to the file you opened
+
+PROFILE_TEXT="
+PATH=\$PATH:/opt/node/bin
+export PATH
+"
+echo "$PROFILE_TEXT" >> ~/.bash_profile
+source ~/.bash_profile
+
+# linking for sudo node (TO FIX THIS - NODE DOES NOT NEED SUDO!!)
+sudo ln -s /opt/node/bin/node /usr/bin/node
+sudo ln -s /opt/node/lib/node /usr/lib/node
+sudo ln -s /opt/node/bin/npm /usr/bin/npm
+sudo ln -s /opt/node/bin/node-waf /usr/bin/node-waf
+
+#Test
+node -v
+npm -v

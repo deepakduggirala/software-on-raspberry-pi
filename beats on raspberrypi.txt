@@ -1,0 +1,83 @@
+http://ict.renevdmark.nl/2016/07/05/elastic-beats-on-raspberry-pi/
+
+ELASTIC BEATS ON RASPBERRY PI
+JULY 5, 2016 RENÉ
+
+First, we need the filebeat binary. Head to https://beats-nightlies.s3.amazonaws.com/index.html?prefix=jenkins/ to get to the nightly builds. Go to the filebeat directory (or any orther beat if you like) and open the most recent directory underneath that (that is with the highest number), so we have the most recent build. Look for the file ending on “-linux-arm” and download it via wget.
+
+$ wget https://beats-nightlies.s3.amazonaws.com/jenkins/filebeat/642-9cd369649054d0184adb0ec54ab4f1679b8c4293/filebeat-linux-arm
+Don’t use this URL, a more recent will be available by the time you read this!
+
+Now we create some directories and move the binary to its own directory to have it all look neat.
+
+$ sudo mkdir /opt/filebeat
+$ sudo mkdir /etc/filebeat
+$ sudo mv filebeat-linux-arm /opt/filebeat/
+Don’t forget to make the binary exectuable.
+
+$ sudo chmod +x /opt/filebeat/filebeat-linux-arm
+I made a sample configuration file, but feel free to adjust it. Using this sample we monitor the auth.log file, so you can see who is logging on to the system, perform sudo commands, etcetera. Also we monitor the apache access and error logs.
+
+$ sudo vi /etc/filebeat/filebeat.yml
+And paste this sample config file into it:
+
+filebeat:
+  prospectors:
+    -
+      paths:
+        - /var/log/auth.log
+      input_type: log
+      document_type: auth
+      scan_frequency: 1s
+
+    -
+      paths:
+        - /var/log/apache2/access.log
+      input_type: log
+      document_type: apache_access
+      scan_frequency: 1s
+
+    -
+      paths:
+        - /var/log/apache2/error.log
+      input_type: log
+      document_type: apache_error
+      scan_frequency: 1s
+
+output:
+  elasticsearch:
+    hosts: ["elk-hostname:9200"]
+    index: "filebeat"
+Replace elk-hostname by your host running Elasticsearch.
+
+Now we have the binary in place, we have a sample config, we only need to get it running. We could start it on the command line, but it would be much nicer to have it running as a service. No worries, I also created a service script for that.
+
+$ cd /lib/systemd/system
+$ sudo vi filebeat.service
+Now, paste this script:
+
+[Unit]
+Description=filebeat
+Documentation=https://www.elastic.co/guide/en/beats/filebeat/current/index.html
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/opt/filebeat/filebeat-linux-arm -c /etc/filebeat/filebeat.yml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+We only need to tell the system to have this service start at boot.
+
+$ systemctl enable filebeat
+The service is now enabled to start again after you reboot the system. But it’s still not running at this moment.  You can start it by using
+
+$ sudo service filebeat start
+That’s all folks!
+
+You can use this also for other beats, like topbeat, to monitor the cpu usage. Only adjust the names accordingly.
+
+Have fun using the beats on your Raspberry Pi!
